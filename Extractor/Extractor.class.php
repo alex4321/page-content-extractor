@@ -53,11 +53,11 @@
       $this->full = $code;
     }
     
-    function getExtracted() {
+    function get_extracted() {
       return $this->extracted;
     }
     
-    function getFull() {
+    function get_full() {
       return $this->full;
     }
     
