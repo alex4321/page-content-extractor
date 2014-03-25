@@ -1,11 +1,13 @@
 <?php
 
+define('BASE_CHARSET', 'utf-8');
+
 class Loader {
   var $raw = NULL;
   var $adress = NULL;
   var $preparing = array();
   
-  function __construct($URL, $preparing=array('absolute_urls')) {
+  function __construct($URL, $preparing=array('fix_encoding', 'absolute_urls')) {
     $this->raw = file_get_contents($URL);
     $this->adress = self::explode_address($URL);
     $this->preparing = $preparing;
@@ -31,11 +33,33 @@ class Loader {
   }
 }
 
+function fix_encoding($code, $address) {
+  $arr = explode("charset=", $code);
+  if($arr) {
+    $arr = explode(">", $arr[1]);
+    $encoding = str_replace('"', '', str_replace("'", "", str_replace(" ", '', $arr[0])));
+    
+    try {
+      return iconv($encoding, BASE_CHARSET, $code);
+    } catch (Exception $ex) {
+      return $code;
+    }
+  }
+  else {
+    return $code;
+  }
+}
+
 function absolute_urls($code, $address) {
   $base = $address['protocol'] . '://' . $address['domain'];
   
   $attributes = array("href=\"", "src=\"", "action=\"", "url(");
   $result = $code;
+  foreach ($attributes as $attribute) {
+    $from = "$attribute//";
+    $to   = "{$attribute}{$address['protocol']}://";
+    $result = str_replace($from, $to, $result);
+  }
   foreach ($attributes as $attribute) {
     $from = "$attribute/";
     $to   = "{$attribute}{$base}/";
